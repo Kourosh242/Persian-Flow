@@ -1,38 +1,61 @@
 /* ============================================================
-   Persian Flow v1.1.0 — RTL + فونت وزیرمتن برای محتوای فارسی
+   Persian Flow v1.2.0 — RTL + فونت فارسی (داینامیک) برای محتوا
    ------------------------------------------------------------
-   نسخه‌ی رفع باگ (همه از بررسی کل سورس):
-   FIX-A (تاگل‌ها به هم گره خورده بودند): با تغییر هر تاگل قبلاً
-     کل صفحه strip و دوباره اسکن می‌شد؛ در صفحات سنگین (>۳۰۰هزار
-     کاراکتر) اسکن کامل کلاً اجرا نمی‌شد و همه‌چیز پاک می‌ماند.
-     حالا «فهرست المان‌های علامت‌خورده» نگه داشته می‌شود و تغییر
-     تنظیمات فقط همان‌ها را بازارزیابی می‌کند — فوری، حتی در
-     صفحات غول‌پیکر، و بدون ریلود.
-   FIX-B (متن فارسیِ همراه لاتین RTL نمی‌شد): تشخیص هایبرید —
-     شروعِ فارسی همیشه RTL است (مثل plaintext) و شروعِ لاتین هم
-     اگر سهم حروف فارسی از ۰٫۳۵ رد شود RTL می‌شود (رفع هر دو باگ
-     «فارسی+لاتین» و «شروع با کلمه‌ی لاتین اما متن فارسی»).
-   FIX-C (گره‌های گمشده در استریم): پردازش بیشتر از FLUSH_CAP در
-     هر فریم قبلاً دور ریخته می‌شد؛ حالا پشتِ صف بعدی برمی‌گردد.
-   FIX-D (پاپ‌آپ): فونت رابط پاپ‌آپ هم وزیرمتن شد.
-   FIX-E (پیام‌های خردشده): حباب‌های flex که پیام را به چند span
-     تقسیم می‌کنند (الگوی ری‌اکت) حالا یکسره mark می‌شوند تا پاراگراف
-     یکپارچه بماند و جزیره‌های RTL به‌هم نریزند — همان باگی که در
-     arena.ai پرانتز/کوتیشن را جابه‌جا می‌کرد. آواتار/img این Modal را
-     غیرفعال می‌کند تا لی‌آوت سایت سالم بماند.
-   FIX-F (علامت‌های کهنه بعد از تغییر ساختار): اگر کانتینرِ مارک‌شده
-     بعداً ساختارش عوض شود (ری‌اکت آواتار/بلوک داخلی تزریق کند یا فرزند
-     کم/زیاد کند)، کلاس‌های flex/dir روی آن می‌ماندند چون کشِ justify
-     هرگز بی‌اعتبار نمی‌شد و والدِ مارک‌دار در موتاسیون‌های افزودن
-     فرزند به صف نمی‌رفت. همچنین رشد متن از سقف ۳۰۰۰ کاراکتر، بدون
-     پاک‌سازی علائم return می‌شد. حالا کش بی‌اعتبار می‌شود و علائم
-     کهنه در هر دو حالت پاک می‌گردند.
+   v1.2.0 (انتخاب فونت + رفع گزارش‌های کاربر):
+   ✦ FIX-G (فونت داینامیک ۱۱تایی): خانواده‌ی فونت دیگر هاردکد
+     نیست. رجیستری مشترک pf-fonts.js منبع واحد است؛ کلید ذخیره‌ای
+     pfFontFamily (پیش‌فرض vazirmatn) با storage.onChanged بی‌درنگ
+     روی صفحه اعمال می‌شود — کلاس خانواده __pf-f-<id>__ روی المان
+     عوض می‌شود و @font-face تزریقی (آدرس مطلق chrome-extension://
+     که با آزمایش زنده ثابت شد زیر سخت‌ترین CSP هم لود می‌شود) با
+     replaceSync روی همان stylesheet زنده بازسازی می‌گردد — بدون
+     ریلود، بدون لود ۱۰ فایل دیگر (فقط فونت فعال لود می‌شود).
+   ✦ FIX-H (به‌هم‌ریختن ترتیب کلمات در لیست و جدول — گزارش ۳ و ۴):
+     علت ریشه‌ای: درون یک پاراگراف/سلول بعضی spanها RTL می‌گرفتند و
+     بعضی نه، پس UBA بین جزیره‌های LTR/RTL ترتیب را قیل‌واقعه
+     می‌کرد. راه حل: وقتی ریل‌ای یک بلوک متنی (LI/TD/BLOCKQUOTE/...)
+     فارسیِ predominant RTL گرفت، کل آن بلوک نیز یکدست علامت‌گذاری
+     می‌شود تا base direction کل پاراگراف یکجا rtl باشد (با محافظ
+     nav/menu و رد بلاک‌های >۳۰۰۰ کاراکتر و parent-recognition).
+   ✦ FIX-J (گم‌شدن پاراگراف هنگام استریم طولانی — گزارش ۱): صف
+     موتاسیون با اضافه‌شدن هدف تکراریِ پی‌درپی (استریم مداوم روی
+     همان گره متن) پر می‌شد و سقف ۲۰۰۰ گره‌های جدید را بی‌صدا
+     حذف می‌کرد؛ صفحات >۳۰۰هزار کاراکتر هم اسکن دوره‌ای نداشتند.
+     حالا: حذف dedupe‌ی consecutive برای همان target، در سرریز
+     پرچم sweep فعال می‌شود و اسکن دوره‌ای جبران می‌کند، و سقف
+     صفحه به ۶۰۰هزار کاراکتر ارتقا یافت (با سقف گره برای پرفورمنس).
+
+   حلقه‌های v1.1.0 (کوتاه): FIX-A بازارزیابی فقط علامت‌خورده‌ها در
+   تاگل؛ FIX-B تشخیص هایبرید فارسیِ غالب؛ FIX-C بقای گره‌های صف
+   بعد از FLUSH_CAP؛ FIX-D فونت رابط پاپ‌آپ؛ FIX-E حباب‌های flex
+   فرگمنت‌شده‌ی ری‌اکت؛ FIX-F بی‌اعتبارسازی کش justify و شستن علائم
+   کهنه هنگام تغییر ساختار/عبور از سقف.
+
    بهینه‌سازی‌ها (سیستم‌های ضعیف): تحلیل تک‌پاس بدون regex، کشِ
-     امضای متن، حذف اجداد تکراری صف، اسکن دوره‌ای فقط وقتی صفحه
-     کثیف است، تب پنهان هیچ کاری نمی‌کند، تاگل فوری و بدون هنگ.
+   امضای متن، حذف اجداد تکراری صف، اسکن دوره‌ای فقط وقتی صفحه
+   کثیف است، تب پنهان هیچ کاری نمی‌کند، تاگل فوری و بدون هنگ.
    ============================================================ */
 (function () {
   "use strict";
+
+  /* ─────────────── فونت‌ها: رجیستری مشترک (pf-fonts.js) ─────────────── */
+
+  var ROOT = typeof globalThis !== "undefined" ? globalThis : window;
+  var FONTS = (ROOT.PF_FONTS && ROOT.PF_FONTS.length) ? ROOT.PF_FONTS : [{
+    id: "vazirmatn", faName: "وزیرمتن", family: "Vazirmatn",
+    variable: true, isDefault: true,
+    faces: [{ file: "Vazirmatn-Variable.woff2", weight: "100 900" }]
+  }];
+  var fontById = ROOT.PF_FONT_BY_ID || function (id) {
+    for (var i = 0; i < FONTS.length; i++) if (FONTS[i].id === id) return FONTS[i];
+    return FONTS[0];
+  };
+  var familyStack = ROOT.PF_FONT_FAMILY_STACK || function (f) {
+    return "'" + f.family + "', 'Vazirmatn', Tahoma, 'Segoe UI', sans-serif,"
+      + " 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji'";
+  };
+  var FONT_STORAGE_KEY = "pfFontFamily";
+  var FONT_DEFAULT_ID = (FONTS[0] && FONTS[0].id) || "vazirmatn";
 
   /* ─────────────── ثابت‌ها ─────────────── */
 
@@ -41,12 +64,15 @@
   var RTLFLEX_CLASS  = "__pf-rtlflex__";
   var RTLFLEXEND_CLASS = "__pf-rtlflexend__";
   var DIR_MARK       = "data-pf-dir";
+  var FAM_ATTR       = "data-pf-fam";      // v1.2.0: کدام خانواده‌ی فونت فعال است
+  var FAM_PREFIX     = "__pf-f-";
 
   var MAX_CONTAINER_TEXT = 3000;   // کانتینر بزرگ‌تر از این = چیدمان، نه پیام
-  var MAX_PAGE_TEXT      = 300000; // صفحات غول‌پیکر: فقط روی موتاسیون‌ها تکیه کن
-  var SCAN_NODE_CAP      = 4000;   // سقف گره‌متنی در هر اسکن
+  var MAX_PAGE_TEXT      = 600000; // FIX-J: ۳۰۰هزار → ۶۰۰هزار (تخته‌های طولانی چت AI)
+  var SCAN_NODE_CAP      = 8000;   // سقف گره‌متنی در هر اسکن (با کش sig ارزان است)
   var FIELD_CAP          = 300;    // سقف فیلدهای بررسی‌شده در هر اسکن
   var FLUSH_CAP          = 150;    // سقف پردازش در هر فریمِ موتاسیون
+  var QUEUE_CAP          = 2000;   // سقف صف حافظه؛ پشت سرش sweep جایگزین است
   var SCAN_INTERVAL      = 4000;   // میلی‌ثانیه
   var SHADOW_DISCOVER_MS = 8000;   // حداقل فاصله‌ی کشف idle
   var SHADOW_DISCOVER_CAP = 2500;  // المان
@@ -74,6 +100,13 @@
     "RT","RP","BDO","BDI","WBR","FONT","NOBR","BIG","STRIKE"
   ]);
 
+  // FIX-H: بلوک‌های متنی که «یکدست» علامت می‌خورند تا ترتیب واژه‌ها
+  // درونشان (به‌ویژه با spanهای خردشده‌ی ری‌اکت) هرگز قیل شود.
+  var UNIFORM_TAGS = new Set([
+    "P","LI","TD","TH","H1","H2","H3","H4","H5","H6",
+    "BLOCKQUOTE","DT","DD","FIGCAPTION","CAPTION","SUMMARY"
+  ]);
+
   // سلکتورهای بلوکیِ متنی وقتی display نامشخص است
   var BLOCK_TAG_RE = /^(P|LI|TD|TH|DT|DD|H\d|BLOCKQUOTE|FIGCAPTION|CAPTION|LABEL|LEGEND|SUMMARY|BUTTON|DIV|ADDRESS|OUTPUT)$/;
 
@@ -86,8 +119,9 @@
 
   /* ─────────────── وضعیت ─────────────── */
 
-  var RTL_ENABLED  = true;
-  var FONT_ENABLED = true;
+  var RTL_ENABLED   = true;
+  var FONT_ENABLED  = true;
+  var CURRENT_FONT_ID = FONT_DEFAULT_ID;   // v1.2.0
 
   var displayCache = new WeakMap(); // el → "block" | "flex" | "inline" ...
   var sigCache     = new WeakMap(); // el → {sig, fa, dominant}
@@ -100,34 +134,51 @@
      دلیل مهمِ تزریق فونت با JS:
      آدرس نسبیِ فونت داخل styles.css تزریق‌شده از مانیفست، نسبت به
      URL خود صفحه resolve می‌شود (نه اکستنشن!) و فونت ۴۰۴ می‌شود —
-     دقیقاً همان باگی که باعث می‌شد وزیرمتن اعمال نشود.
-     پس @font-face را با آدرس مطلق chrome-extension:// تزریق می‌کنیم؛
-     کلاس‌ها همچنان از مانیفست می‌آیند (سریع و مصون از CSP). */
+     دقیقاً همان باگی که باعث می‌شد وزیرمتن اعمال نشود و با آزمایش
+     زنده روی کروم ۱۴۸ اثبات شد. پس @font-face را با آدرس مطلق
+     chrome-extension:// فقط برای «فونت فعال» تزریق می‌کنیم؛
+     کلاس‌ها همچنان از مانیفست می‌آیند (سریع و مصون از CSP).
+     v1.2.0: هندل‌های stylesheet ثبت می‌شوند تا هنگام عوض شدن
+     فونت، همان sheet با replaceSync به‌روز شود — فوری و بدون ریلود. */
 
-  var FONT_FILE = "Vazirmatn-Variable.woff2";
+  function famClass(id) { return FAM_PREFIX + id + "__"; }
+
+  function activeFont() { return fontById(CURRENT_FONT_ID); }
 
   function fontBase() {
     try { return chrome.runtime.getURL("fonts/"); } catch (e) { return ""; }
   }
 
   function fontFaceCSS(base) {
-    return "@font-face{font-family:'Vazirmatn';font-style:normal;"
-      + "font-weight:100 900;font-display:swap;"
-      + "src:url('" + base + FONT_FILE + "') format('woff2');}";
+    var f = activeFont();
+    var css = "";
+    for (var i = 0; i < f.faces.length; i++) {
+      css += "@font-face{font-family:'" + f.family + "';font-style:normal;"
+        + "font-weight:" + f.faces[i].weight + ";font-display:swap;"
+        + "src:url('" + base + f.faces[i].file + "') format('woff2');}";
+    }
+    return css;
   }
 
   // همان قوانین styles.css برای محیط‌هایی که مانیفست نمی‌رسد (shadow root)
+  // خانواده‌ها از رجیستری ساخته می‌شوند تا برای همیشه همگام بمانند.
   function rulesCSS() {
-    return "." + RTL_CLASS + "{unicode-bidi:plaintext!important;text-align:right!important}"
+    var s = "." + RTL_CLASS + "{unicode-bidi:plaintext!important;text-align:right!important}"
       + "." + RTL_CLASS + " pre," + "." + RTL_CLASS + " code{text-align:left!important}"
       + "." + RTLFLEX_CLASS + "{direction:rtl!important;text-align:right!important}"
       + "." + RTLFLEXEND_CLASS + "{direction:rtl!important;text-align:right!important;justify-content:flex-start!important}"
       + "." + FONT_CLASS + "," + "." + FONT_CLASS + " *{"
-      + "font-family:'Vazirmatn','Vazir',Tahoma,'Segoe UI',sans-serif,"
+      + "font-family:'Vazirmatn',Tahoma,'Segoe UI',sans-serif,"
       + "'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji'!important;}";
+    for (var i = 0; i < FONTS.length; i++) {
+      s += "." + famClass(FONTS[i].id) + "," + "." + famClass(FONTS[i].id) + " *{"
+        + "font-family:" + familyStack(FONTS[i]) + "!important;}";
+    }
+    return s;
   }
 
-  // تزریق stylesheet به document یا shadowRoot؛ adoptedStyleSheets مصون از style-src صفحه است
+  // تزریق stylesheet به document یا shadowRoot؛ adoptedStyleSheets مصون از style-src صفحه است.
+  // هندل برمی‌گرداند تا بعداً CSS تزریق‌شده بتواند بی‌درنگ عوض شود (تعویض فونت).
   function addSheet(target, cssText, isDoc) {
     try {
       if (typeof CSSStyleSheet !== "undefined") {
@@ -135,11 +186,11 @@
         sheet.replaceSync(cssText);
         if (isDoc && "adoptedStyleSheets" in document) {
           document.adoptedStyleSheets = document.adoptedStyleSheets.concat([sheet]);
-          return true;
+          return { kind: "ss", obj: sheet, target: target, isDoc: true };
         }
         if (!isDoc && "adoptedStyleSheets" in target) {
           target.adoptedStyleSheets = target.adoptedStyleSheets.concat([sheet]);
-          return true;
+          return { kind: "ss", obj: sheet, target: target, isDoc: false };
         }
       }
     } catch (e) {}
@@ -150,23 +201,51 @@
       style.textContent = cssText;
       if (isDoc) (doc.head || doc.documentElement || doc).appendChild(style);
       else target.appendChild(style);
-      return true;
-    } catch (e) { return false; }
+      return { kind: "node", obj: style, target: target, isDoc: isDoc };
+    } catch (e) { return null; }
   }
 
-  // تزریق فونتِ سند اصلی (فقط یک‌بار، در همان document_start)
-  var injectedFont = false;
+  function retargetSheet(handle, cssText) {
+    try {
+      if (!handle || !handle.obj) return;
+      if (handle.kind === "ss" && handle.obj.replaceSync) handle.obj.replaceSync(cssText);
+      else if (handle.kind === "node") handle.obj.textContent = cssText;
+    } catch (e) {}
+  }
+
+  // هندل‌های فونتِ سند اصلی (معمولاً یکی؛ ساخته‌ی اضافی هم بی‌ضررند)
+  var fontSheetHandles = [];
   function injectFontFace() {
-    if (injectedFont) return;
-    try { if (addSheet(document, fontFaceCSS(fontBase()), true)) injectedFont = true; }
-    catch (e) {}
+    try {
+      var h = addSheet(document, fontFaceCSS(fontBase()), true);
+      if (h) fontSheetHandles.push(h);
+    } catch (e) {}
   }
 
   function styleShadowRoot(sr) {
     if (styledShadows.has(sr)) return;
     styledShadows.add(sr);
-    var css = fontFaceCSS(fontBase()) + rulesCSS();
-    addSheet(sr, css, false);
+    var h = addSheet(sr, fontFaceCSS(fontBase()) + rulesCSS(), false);
+    if (h) fontSheetHandles.push(h);
+  }
+
+  // v1.2.0: عوض شدن فونت → بازنویسی همان sheetهای زنده (بدون ریلود)
+  // هندل‌های مرده (shadow/گره‌ی جداشده) هرس می‌شوند.
+  function refreshFontSheets() {
+    var base = fontBase();
+    var alive = [];
+    for (var i = 0; i < fontSheetHandles.length; i++) {
+      var h = fontSheetHandles[i];
+      var ok = true;
+      try {
+        if (h.isDoc) ok = true;
+        else ok = !!(h.target && (h.target === document || h.target.isConnected !== false || (h.target.host && h.target.host.isConnected)));
+      } catch (e) { ok = true; }
+      if (!ok) continue;
+      retargetSheet(h, h.isDoc ? fontFaceCSS(base) : fontFaceCSS(base) + rulesCSS());
+      alive.push(h);
+    }
+    fontSheetHandles = alive;
   }
 
   /* ─────────────── تحلیل display (با کش) ─────────────── */
@@ -208,7 +287,7 @@
   // FIX-E v2: کانتینر flex/grid که همه‌ی فرزندانش فرگمنتِ متنیِ inline‌اند.
   // این الگو «پیامِ خردشده به span» در ری‌اکت است (نه منوی سایت!)
   // - هر فرزندی غیر‑inline (آواتار، دکمه، svg، div) → رد
-  // - کانتینری که همه‌ی بچه‌هایش لینک (<a>) است = نوبار/منو → رد
+  // - کانتینری که همه‌ی بچه‌هایش لینک (<a>) است = منو → رد
   function isFlexFragText(el) {
     var ch = el.children;
     var n = ch ? ch.length : 0;
@@ -369,10 +448,21 @@
       el.classList.toggle(RTLFLEX_CLASS,    wantRtl && kind === 1);
       el.classList.toggle(RTLFLEXEND_CLASS, wantRtl && kind === 2);
       el.classList.toggle(FONT_CLASS, !!(FONT_ENABLED && fa));
+
+      // v1.2.0 (FIX-G): کلاس خانواده‌ی فونت، همگام با انتخاب فعلی کاربر
+      var famAttr = el.getAttribute(FAM_ATTR) || "";
+      var wantFamId = FONT_ENABLED && fa ? fontById(CURRENT_FONT_ID).id : "";
+      if (famAttr !== wantFamId) {
+        if (famAttr) el.classList.remove(famClass(famAttr));
+        if (wantFamId) el.classList.add(famClass(wantFamId));
+        if (wantFamId) el.setAttribute(FAM_ATTR, wantFamId);
+        else el.removeAttribute(FAM_ATTR);
+      }
+
       // FIX-A: اگر هنوز نشانه‌ای روی المان هست ثبتش کن، وگرنه از فهرست خارجش کن
       if (el.classList.contains(RTL_CLASS) || el.classList.contains(FONT_CLASS)
           || el.classList.contains(RTLFLEX_CLASS) || el.classList.contains(RTLFLEXEND_CLASS)) marked.add(el);
-      else if (!el.hasAttribute || !el.hasAttribute(DIR_MARK)) marked.delete(el);
+      else if (!el.hasAttribute || (!el.hasAttribute(DIR_MARK) && !el.hasAttribute(FAM_ATTR))) marked.delete(el);
     } catch (e) {}
   }
 
@@ -380,11 +470,15 @@
   function clearEl(el) {
     sigCache.delete(el);
     jcCache.delete(el);
+    var fam = "";
+    try { fam = el.getAttribute && (el.getAttribute(FAM_ATTR) || ""); } catch (e) {}
     try {
       el.classList.remove(RTL_CLASS);
       el.classList.remove(FONT_CLASS);
       el.classList.remove(RTLFLEX_CLASS);
       el.classList.remove(RTLFLEXEND_CLASS);
+      if (fam) el.classList.remove(famClass(fam));
+      el.removeAttribute && el.removeAttribute(FAM_ATTR);
     } catch (e) {}
     try {
       if (el.hasAttribute && el.hasAttribute(DIR_MARK)) restoreDir(el);
@@ -420,6 +514,57 @@
       sigCache.set(el, { sig: sig, fa: r.fa, dominant: r.dominant });
     }
     applyClasses(el, r.fa, r.dominant);
+
+    // FIX-H: بلوک یکدست — اگر ریل‌ای درون LI/TD/P/... RTL گرفت و کل بلوک
+    // فارسیِ predominant است، خود بلوک هم علامت بخورد تا base direction
+    // کل پاراگراف یکجا rtl باشد و ترتیب کلمات هرگز قیل نشود (گزارش ۳ و ۴).
+    if (RTL_ENABLED && r.fa && r.dominant) uniformMark(el);
+  }
+
+  // FIX-H: الصای «بلوک یکدست» — از ریل‌ای به سمت بالا، اولین بلوک متنی
+  // قابل یکسانسازی را پیدا و (اگر فارسی predominant بود) علامت‌گذاری کن.
+  // محافظ‌ها: nav/menu/منوها، ادیتور، سقف متن کانتینر، و تگ‌های چیدمانی.
+  function uniformMark(el) {
+    var anc = el;
+    var hops = 0;
+    while (anc && hops < 4) {
+      anc = anc.parentElement;
+      if (!anc || !anc.tagName) break;
+      var tg = anc.tagName;
+      if (SKIP.has(tg)) break;
+      if (editableRoot(anc)) break;
+      if (UNIFORM_TAGS.has(tg)) {
+        // محافظ نوبار/منو: بلوک درون ناوبری هرگز یکدست علامت نمی‌گیرد
+        try {
+          if (anc.closest && anc.closest("nav,[role=navigation],[role=menubar],[role=menu]")) break;
+        } catch (e) {}
+        applyBlockEl(anc);
+        break;
+      }
+      if (STOP.has(tg)) break; // دیوار چیدمان: بالاتر نرو
+      hops++;
+    }
+  }
+
+  // FIX-H: علامت‌گذاری بلوک یکدست — مانند applyEl ولی تگ‌های STOP
+  // محض (LI درون UL، TD درون TR) هم مجازند چون همان دیوار بالاتر است.
+  function applyBlockEl(el) {
+    if (!el || !el.tagName) return;
+    var tag = el.tagName;
+    if (SKIP.has(tag)) return;
+    if (tag === "INPUT" || tag === "TEXTAREA" || editableRoot(el)) return;
+    var t;
+    try { t = el.textContent || ""; } catch (e) { return; }
+    if (!t || t.length > MAX_CONTAINER_TEXT) return;
+    var sig = textSig(t);
+    var cached = sigCache.get(el);
+    var r;
+    if (cached && cached.sig === sig) r = cached;
+    else {
+      r = analyze(t);
+      sigCache.set(el, { sig: sig, fa: r.fa, dominant: r.dominant });
+    }
+    if (r.fa && r.dominant) applyClasses(el, true, true);
   }
 
   /* ─────────────── فیلدها: input / textarea / contenteditable ─────────────── */
@@ -450,6 +595,18 @@
     var r = t ? analyze(t) : NO;
 
     try { el.classList.toggle(FONT_CLASS, !!(FONT_ENABLED && r.fa)); } catch (e) {}
+
+    // v1.2.0: فیلدها هم کلاس خانواده‌ی فونت می‌گیرند (هماهنگ با انتخاب کاربر)
+    try {
+      var famAttr = el.getAttribute(FAM_ATTR) || "";
+      var wantFamId = FONT_ENABLED && r.fa ? fontById(CURRENT_FONT_ID).id : "";
+      if (famAttr !== wantFamId) {
+        if (famAttr) el.classList.remove(famClass(famAttr));
+        if (wantFamId) el.classList.add(famClass(wantFamId));
+        if (wantFamId) el.setAttribute(FAM_ATTR, wantFamId);
+        else el.removeAttribute(FAM_ATTR);
+      }
+    } catch (e) {}
 
     // dir=auto بومی: هنگام تایپ فارسی خودش راست‌چین می‌شود،
     // انگلیسی چپ‌چین می‌ماند، و مقدار اصلی سایت بازگردانده می‌شود.
@@ -539,8 +696,6 @@
     } catch (e) {}
   }
 
-  // «پروب» سبک: وقتی المانی (مخصوصاً وب‌کامپوننت) به صفحه اضافه می‌شود،
-  // معمولاً خیلی زود shadow root می‌سازد → کشف را با دی‌بانس کوتاه اجرا کن.
   var probeTimer = null;
   function scheduleShadowProbe() {
     if (probeTimer) return;
@@ -554,16 +709,8 @@
 
   function stripRoot(root) {
     try {
-      // یک پاس واحد روی DOM به‌جای سه پاس (رفع هنگ هنگام تاگل)
-      var els = root.querySelectorAll("." + RTL_CLASS + ",." + FONT_CLASS + ",." + RTLFLEX_CLASS + ",." + RTLFLEXEND_CLASS + ",[" + DIR_MARK + "]");
-      for (var i = 0; i < els.length; i++) {
-        var el = els[i];
-        el.classList.remove(RTL_CLASS);
-        el.classList.remove(FONT_CLASS);
-        el.classList.remove(RTLFLEX_CLASS);
-        el.classList.remove(RTLFLEXEND_CLASS);
-        if (el.hasAttribute(DIR_MARK)) restoreDir(el);
-      }
+      var els = root.querySelectorAll("." + RTL_CLASS + ",." + FONT_CLASS + ",." + RTLFLEX_CLASS + ",." + RTLFLEXEND_CLASS + ",[" + DIR_MARK + "],[" + FAM_ATTR + "]");
+      for (var i = 0; i < els.length; i++) clearEl(els[i]);
     } catch (e) {}
   }
 
@@ -592,7 +739,7 @@
   }
 
   // FIX-A: فقط المان‌هایی که پیش‌تر علامت گرفته‌اند بازارزیابی می‌شوند.
-  // سریع، مستقل از بزرگی صفحه، و far هم mergeن نگه می‌دارد دو تاگل را:
+  // سریع، مستقل از بزرگی صفحه، و دو تاگل را هم‌پوش نگه می‌دارد:
   // هر المان با وضعیتِ فعلیِ هر دو پرچم دوباره کلاس می‌گیرد — حذف یکی
   // دیگری را نمی‌پرانَد.
   function reapplyMarked() {
@@ -618,13 +765,15 @@
       var cl = el.classList;
       return !!(cl && (cl.contains(RTL_CLASS) || cl.contains(FONT_CLASS)
         || cl.contains(RTLFLEX_CLASS) || cl.contains(RTLFLEXEND_CLASS)))
-        || (el.hasAttribute && el.hasAttribute(DIR_MARK));
+        || (el.hasAttribute && (el.hasAttribute(DIR_MARK) || el.hasAttribute(FAM_ATTR)));
     } catch (e) { return false; }
   }
 
   /* ─────────────── MutationObserver (بهینه) ─────────────── */
 
   var queue = [];
+  var queueTail = null;   // FIX-J: گره تکراریِ استریم را دوباره صف نکن
+  var sweep = false;      // FIX-J: سرریز صف → اسکن جبرانی در تیک دوره‌ای
   var flying = false;
   var flushTimer = null;
   var dirty = false;
@@ -686,7 +835,7 @@
     var out = [];
     for (var qi = 0; qi < queue.length; qi++) {
       var node = queue[qi];
-      var anc = node.nodeType === Node.TEXT_NODE ? node.parentElement : node.parentElement;
+      var anc = node.parentElement;
       var hops = 0, covered = false;
       while (anc && hops < 20) {
         if (qset.has(anc)) { covered = true; break; }
@@ -696,6 +845,7 @@
       if (!covered) out.push(node);
     }
     queue = [];
+    queueTail = null;
 
     var done = 0;
     for (var i = 0; i < out.length && done < FLUSH_CAP; i++) {
@@ -705,6 +855,7 @@
     // FIX-C: باقیمانده را برای فریم بعدی نگه دار — قبلاً بی‌صدا گم می‌شد!
     if (done < out.length) {
       queue = out.slice(done);
+      if (queue.length) queueTail = queue[queue.length - 1];
       schedule();
     }
   }
@@ -716,7 +867,9 @@
       for (var i = 0; i < mutations.length; i++) {
         var m = mutations[i];
         if (m.type === "characterData") {
-          queue.push(m.target);
+          // FIX-J: استریم مداوم همان گره متن را دوباره و دوباره صف می‌کرد؛
+          // پی‌درپی تکراری‌ها یک‌بار کافی‌اند، صف برای گره‌های جدید خالی می‌ماند
+          if (m.target !== queueTail) queue.push(m.target), queueTail = m.target;
         } else {
           var added = m.addedNodes;
           for (var j = 0; j < added.length; j++) {
@@ -740,7 +893,12 @@
             queue.push(m.target);
         }
       }
-      if (queue.length > 2000) queue.length = 2000; // سیل‌ها: اسکن دوره‌ای جبران می‌کند
+      // FIX-J: سرریز سخت → گره‌های جدید حذف نمی‌شوند؛ برای همیشه
+      // پرچم sweep روشن می‌شود و اسکن دوره‌ای جبران می‌کند
+      if (queue.length > QUEUE_CAP) {
+        queue.length = QUEUE_CAP;
+        sweep = true;
+      }
       schedule();
     });
   } catch (e) { observer = null; }
@@ -752,9 +910,10 @@
     if (interval) return;
     interval = setInterval(function () {
       if (document.hidden) return;
-      if (dirty) {
+      if (dirty || sweep) {   // FIX-J: sweep حتی بدون dirty جدید
         dirty = false;
-        scanAll();
+        if (sweep) { sweep = false; scanAll(); }
+        else scanAll();
       } else {
         discoverShadows(); // داخلی throttled است
       }
@@ -774,11 +933,18 @@
 
   /* ─────────────── تنظیمات ─────────────── */
 
+  function sanitizeFontId(id) {
+    try { return fontById(String(id)).id; } catch (e) { return FONT_DEFAULT_ID; }
+  }
+
   function readPrefs(cb) {
     try {
-      chrome.storage.sync.get({ rtlEnabled: true, fontEnabled: true }, function (prefs) {
+      var def = { rtlEnabled: true, fontEnabled: true };
+      def[FONT_STORAGE_KEY] = FONT_DEFAULT_ID;
+      chrome.storage.sync.get(def, function (prefs) {
         RTL_ENABLED  = !!prefs.rtlEnabled;
         FONT_ENABLED = !!prefs.fontEnabled;
+        CURRENT_FONT_ID = sanitizeFontId(prefs[FONT_STORAGE_KEY]);
         cb();
       });
     } catch (e) { cb(); }
@@ -800,6 +966,12 @@
     chrome.storage.onChanged.addListener(function (changes) {
       if (changes.rtlEnabled  !== undefined) RTL_ENABLED  = !!changes.rtlEnabled.newValue;
       if (changes.fontEnabled !== undefined) FONT_ENABLED = !!changes.fontEnabled.newValue;
+      // FIX-G: فونت → stylesheetهای زنده بازنویسی می‌شوند و
+      // کلاس خانواده‌ی المان‌های علامت‌خورده دوباره سنجیده می‌شود
+      if (changes[FONT_STORAGE_KEY] !== undefined) {
+        CURRENT_FONT_ID = sanitizeFontId(changes[FONT_STORAGE_KEY].newValue);
+        refreshFontSheets();
+      }
       scheduleApplyAll();
     });
   } catch (e) {}
