@@ -1,0 +1,147 @@
+/* ============================================================
+   Persian Flow v1.3.0 — قوانین کلاس‌ها (تزریق از مسیر مانیفست)
+   ------------------------------------------------------------
+   نکته: @font-face عمداً اینجا نیست! آدرس نسبی در CSS تزریقیِ
+   مانیفست نسبت به URL خود صفحه ریزالو می‌شود و درخواست فونت به
+   دامنه‌ی سایت می‌رود (۴۰۴ — در کروم ۱۴۸ با آزمایش زنده اثبات
+   شد). فونت با JS و آدرس مطلق chrome-extension:// در content.js
+   تزریق می‌شود (adoptedStyleSheets مصون از CSP صفحه است؛ روی
+   سخت‌ترین CSP هم فونت لود شد — test/e2e-csp).
+
+   نکته‌ی لی‌آوت: به‌جای direction: rtl روی متن‌های عادی از
+   unicode-bidi: plaintext استفاده می‌کنیم — direction روی
+   flex/grid محور را برمی‌گرداند و جای حباب‌های چت را به‌هم
+   می‌ریخت؛ plaintext فقط ترتیب گلیف‌ها را درست می‌کند و به
+   لی‌آوت سایت دست نمی‌زند. (حباب‌های flex فرگمنت‌شده استثناء
+   هستند و در کلاس‌های جداگانه‌ای آمده‌اند.)
+
+   v1.2.0: خانواده‌ی فونت دیگر هاردکد نیست؛ __pf-font__ معناش
+   «فونت فعال» است و کلاس __pf-f-<id>__ خانواده‌ی واقعی را
+   حمل می‌کند. قانون __pf-font__ با پشته‌ی وزیرمتن همان‌جا
+   می‌ماند (سازگاری عقبرو + پیش‌فرض) و کلاس‌های خانواده
+   بعد از آن آمده‌اند تا با specificity برابر غلبه کنند.
+   این کلاس‌ها با رجیستری pf-fonts.js همگام‌اند — تست jsdom
+   بررسی می‌کند که برای هر id رجیستری کلاس معادل در این
+   فایل وجود دارد تا drift رخ ندهد.
+   ============================================================ */
+
+/* :not(#__pfz__) فقط برای بالا بردن specificity است تا روی
+   استایل‌های !important خودِ سایت هم غلبه کند */
+
+.__pf-rtl__:not(#__pfz__):not(#__pfz__) {
+  unicode-bidi: plaintext !important;
+  text-align: right !important;
+}
+
+/* حباب‌های flex با فرگمنت‌های inline (پیام تکه‌تکه‌ی ری‌اکت):
+   direction روی خودِ فلکس، ترتیب بصریِ spanها را معکوس می‌کند.
+   چرا اینجا direction امن است؟ چون تمام فرزندان inline هستند،
+   پس معکوس‌شدن فقط ترتیب متن را اصلاح می‌کند نه لی‌آوت سایت را. */
+.__pf-rtlflex__:not(#__pfz__):not(#__pfz__) {
+  direction: rtl !important;
+  text-align: right !important;
+}
+
+/* وقتی سایت خودش justify-content: *-end داشته، بعد از تعویض جهت
+   لنگر بصری به چپ می‌رود؛ با flex-start جبرانش می‌کنیم تا حباب
+   همچنان به همان لبه‌ی «راست» بچسبد. */
+.__pf-rtlflexend__:not(#__pfz__):not(#__pfz__) {
+  direction: rtl !important;
+  text-align: right !important;
+  justify-content: flex-start !important;
+}
+
+/* بلوک‌های کد داخل محتوای فارسی باید چپ‌چین بمانند */
+.__pf-rtl__:not(#__pfz__):not(#__pfz__) :is(pre, code, kbd, samp, .cm-content, .monaco-editor) {
+  text-align: left !important;
+}
+
+/* ── فونت ───────────────────────────────────────────────────
+   __pf-font__ = «فونت فارسی روشن است» (پشته‌ی پیش‌فرض وزیرمتن؛
+   هم برای سازگاری عقبرو، هم برای هر نشانه‌ای که کلاس خانواده ندارد) */
+.__pf-font__:not(#__pfz__):not(#__pfz__),
+.__pf-font__:not(#__pfz__) * {
+  font-family: 'Vazirmatn', Tahoma, 'Segoe UI', sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji' !important;
+}
+
+/* کلاس‌های خانواده — پس از قانون پیش‌فرض آمده‌اند تا غلبه کنند.
+   برای هر فونت: خودش، وزیرمتن به‌عنوان پوشش گلیف، فونت‌های سیستمی،
+   و در انتها ایموجی‌ها. */
+
+.__pf-f-vazirmatn__:not(#__pfz__):not(#__pfz__),
+.__pf-f-vazirmatn__:not(#__pfz__) * {
+  font-family: 'Vazirmatn', Tahoma, 'Segoe UI', sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji' !important;
+}
+
+.__pf-f-estedad__:not(#__pfz__):not(#__pfz__),
+.__pf-f-estedad__:not(#__pfz__) * {
+  font-family: 'Estedad', 'Vazirmatn', Tahoma, 'Segoe UI', sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji' !important;
+}
+
+.__pf-f-mikhak__:not(#__pfz__):not(#__pfz__),
+.__pf-f-mikhak__:not(#__pfz__) * {
+  font-family: 'Mikhak', 'Vazirmatn', Tahoma, 'Segoe UI', sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji' !important;
+}
+
+.__pf-f-sahel__:not(#__pfz__):not(#__pfz__),
+.__pf-f-sahel__:not(#__pfz__) * {
+  font-family: 'Sahel', 'Vazirmatn', Tahoma, 'Segoe UI', sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji' !important;
+}
+
+.__pf-f-samim__:not(#__pfz__):not(#__pfz__),
+.__pf-f-samim__:not(#__pfz__) * {
+  font-family: 'Samim', 'Vazirmatn', Tahoma, 'Segoe UI', sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji' !important;
+}
+
+.__pf-f-shabnam__:not(#__pfz__):not(#__pfz__),
+.__pf-f-shabnam__:not(#__pfz__) * {
+  font-family: 'Shabnam', 'Vazirmatn', Tahoma, 'Segoe UI', sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji' !important;
+}
+
+.__pf-f-parastoo__:not(#__pfz__):not(#__pfz__),
+.__pf-f-parastoo__:not(#__pfz__) * {
+  font-family: 'Parastoo', 'Vazirmatn', Tahoma, 'Segoe UI', sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji' !important;
+}
+
+.__pf-f-nahid__:not(#__pfz__):not(#__pfz__),
+.__pf-f-nahid__:not(#__pfz__) * {
+  font-family: 'Nahid', 'Vazirmatn', Tahoma, 'Segoe UI', sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji' !important;
+}
+
+.__pf-f-gandom__:not(#__pfz__):not(#__pfz__),
+.__pf-f-gandom__:not(#__pfz__) * {
+  font-family: 'Gandom', 'Vazirmatn', Tahoma, 'Segoe UI', sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji' !important;
+}
+
+.__pf-f-tanha__:not(#__pfz__):not(#__pfz__),
+.__pf-f-tanha__:not(#__pfz__) * {
+  font-family: 'Tanha', 'Vazirmatn', Tahoma, 'Segoe UI', sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji' !important;
+}
+
+.__pf-f-behdad__:not(#__pfz__):not(#__pfz__),
+.__pf-f-behdad__:not(#__pfz__) * {
+  font-family: 'Behdad', 'Vazirmatn', Tahoma, 'Segoe UI', sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji' !important;
+}
+
+/* ── FIX-N (v1.3.0): کد باید مونواسپیس بماند ─────────────────
+   قانون «*»ی فونت فارسی به تمام نوادگانِ بلوکِ فارسی می‌رسید و
+   <code>/<pre> و توکن‌های هایلایت‌شده‌ی کد داخل چت‌های AI را هم
+   از مونواسپیس به فونت فارسی می‌برد. این قانون — عمداً بعد از
+   هر ۱۱ کلاس خانواده و با :is (specificity بالاتر از قانون «*») —
+   نواده‌های کد را یکجا به پشته‌ی مونواسپیس برمی‌گرداند. */
+.__pf-font__:not(#__pfz__):not(#__pfz__) :is(pre, code, kbd, samp, tt, .cm-content, .monaco-editor),
+.__pf-font__:not(#__pfz__):not(#__pfz__) :is(pre, code, kbd, samp, tt, .cm-content, .monaco-editor) * {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace !important;
+}
