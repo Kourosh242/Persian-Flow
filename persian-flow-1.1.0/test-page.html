@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Persian Flow v1.0.0 — تست محلی</title>
+<title>Persian Flow v1.1.0 — تست محلی</title>
 <!-- شبیه‌سازی CSP سخت‌گیرانه مثل GitHub: هیچ فونت خارجی مجاز نیست -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline';">
 <style>
@@ -16,7 +16,7 @@
 </head>
 <body>
 
-<h1 style="font-size:18px">تست Persian Flow v1.0.0 (CSP فعال است — font-src 'self')</h1>
+<h1 style="font-size:18px">تست Persian Flow v1.1.0 (CSP فعال است — font-src 'self')</h1>
 <p style="font-size:12px;color:#777">اگر اکستنشن درست کار کند، همه متن‌های فارسی زیر باید راست‌چین و با فونت وزیرمتن نمایش داده شوند — با وجود CSP بالا. کنسول را باز کنید: نباید خطای CSP برای فونت ببینید.</p>
 
 <div class="card"><h2>۱. متن فارسی خالص</h2>
@@ -25,8 +25,14 @@
 <div class="card"><h2>۲. فارسی + انگلیسی مخلوط (غالب فارسی)</h2>
 <p>این مدل GPT-4 واقعاً عالی شده و reasoning آن از همه مدل‌ها بهتر است!</p></div>
 
+<div class="card"><h2>۲-ب. رگرسیون: شروع با لاتین اما متن فارسی‌غالب (باید RTL شود)</h2>
+<p>apt دانلودش کامل نشد. بذار وضعیت npm رو چک کنم و فقط بخش apt رو دوباره درست اجرا کنم — همه‌چیز فارسی است!</p></div>
+
 <div class="card"><h2>۳. جمله انگلیسی با یک کلمه فارسی (باید چپ‌چین بماند، فقط فونت بگیرد)</h2>
 <p>He said سلام during the meeting and everyone smiled at him.</p></div>
+
+<div class="card"><h2>۳-ب. رگرسیون v1.1.0 — پیام فارسیِ شروع‌شده با فارسی و پر از لاتین (باید RTL شود)</h2>
+<p>سلام پوشه uploads رو پاک کن و بریم برای ورژن 1.1.0 که اپدیت بدیم و این کاملاً در گیت هاب پوش شده، دمت گرم حرفه‌ای!</p></div>
 
 <div class="card"><h2>۴. حباب چت شبیه arena.ai (flex + justify-end → حباب کاربر باید راست بماند)</h2>
 <div class="row" style="justify-content:flex-end"><div class="bubble" style="background:#dcf8c6">سوال فارسی من: چطور از API استفاده کنم؟</div></div>

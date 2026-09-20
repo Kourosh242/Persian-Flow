@@ -1,31 +1,46 @@
 /* ============================================================
-   Persian Flow v1.0.0 — RTL + فونت وزیرمتن برای محتوای فارسی
+   Persian Flow v1.1.0 — RTL + فونت وزیرمتن برای محتوای فارسی
    ------------------------------------------------------------
-   بهینه‌سازی‌های این نسخه (برای سیستم‌های ضعیف):
-   • استایل از مسیر مانیفست تزریق می‌شود (styles.css) → بدون سربار
-     JS و مصون از CSP؛ فقط برای Shadow DOM با JS تزریق می‌کنیم.
-   • تحلیل فارسی تک‌پاس و بدون regex/آرایه (درجا روی charCode).
-   • کشِ امضای متن (WeakMap): کانتینری که متنش عوض نشده، دوباره
-     تحلیل و دست‌کاری نمی‌شود.
-   • صف موتاسیون با حذف اجدادِ تکراری و سقف پردازش در هر فریم.
-   • اسکن دوره‌ای فقط وقتی صفحه «کثیف» است؛ کشف Shadow DOM
-     حداکثر هر ۸ ثانیه یک‌بار و با سقف المان.
-   • تب پنهان: هیچ کاری انجام نمی‌شود.
-
-   دقتِ اعمال:
-   • فقط نزدیک‌ترین کانتینرِ متنی علامت می‌خورد؛ بلاک‌های بزرگِ
-     چیدمان (با فرزندان زیاد) هرگز کل‌سایت-RTL نمی‌شوند.
-   • اگر ساختار flex باشد، به نزدیک‌ترین المانِ inline برمی‌گردیم
-     (چیپ‌ها، سشن‌ها، پیام‌های دارای ایموجی) — بدون شکستن لی‌آوت.
+   نسخه‌ی رفع باگ (همه از بررسی کل سورس):
+   FIX-A (تاگل‌ها به هم گره خورده بودند): با تغییر هر تاگل قبلاً
+     کل صفحه strip و دوباره اسکن می‌شد؛ در صفحات سنگین (>۳۰۰هزار
+     کاراکتر) اسکن کامل کلاً اجرا نمی‌شد و همه‌چیز پاک می‌ماند.
+     حالا «فهرست المان‌های علامت‌خورده» نگه داشته می‌شود و تغییر
+     تنظیمات فقط همان‌ها را بازارزیابی می‌کند — فوری، حتی در
+     صفحات غول‌پیکر، و بدون ریلود.
+   FIX-B (متن فارسیِ همراه لاتین RTL نمی‌شد): تشخیص هایبرید —
+     شروعِ فارسی همیشه RTL است (مثل plaintext) و شروعِ لاتین هم
+     اگر سهم حروف فارسی از ۰٫۳۵ رد شود RTL می‌شود (رفع هر دو باگ
+     «فارسی+لاتین» و «شروع با کلمه‌ی لاتین اما متن فارسی»).
+   FIX-C (گره‌های گمشده در استریم): پردازش بیشتر از FLUSH_CAP در
+     هر فریم قبلاً دور ریخته می‌شد؛ حالا پشتِ صف بعدی برمی‌گردد.
+   FIX-D (پاپ‌آپ): فونت رابط پاپ‌آپ هم وزیرمتن شد.
+   FIX-E (پیام‌های خردشده): حباب‌های flex که پیام را به چند span
+     تقسیم می‌کنند (الگوی ری‌اکت) حالا یکسره mark می‌شوند تا پاراگراف
+     یکپارچه بماند و جزیره‌های RTL به‌هم نریزند — همان باگی که در
+     arena.ai پرانتز/کوتیشن را جابه‌جا می‌کرد. آواتار/img این Modal را
+     غیرفعال می‌کند تا لی‌آوت سایت سالم بماند.
+   FIX-F (علامت‌های کهنه بعد از تغییر ساختار): اگر کانتینرِ مارک‌شده
+     بعداً ساختارش عوض شود (ری‌اکت آواتار/بلوک داخلی تزریق کند یا فرزند
+     کم/زیاد کند)، کلاس‌های flex/dir روی آن می‌ماندند چون کشِ justify
+     هرگز بی‌اعتبار نمی‌شد و والدِ مارک‌دار در موتاسیون‌های افزودن
+     فرزند به صف نمی‌رفت. همچنین رشد متن از سقف ۳۰۰۰ کاراکتر، بدون
+     پاک‌سازی علائم return می‌شد. حالا کش بی‌اعتبار می‌شود و علائم
+     کهنه در هر دو حالت پاک می‌گردند.
+   بهینه‌سازی‌ها (سیستم‌های ضعیف): تحلیل تک‌پاس بدون regex، کشِ
+     امضای متن، حذف اجداد تکراری صف، اسکن دوره‌ای فقط وقتی صفحه
+     کثیف است، تب پنهان هیچ کاری نمی‌کند، تاگل فوری و بدون هنگ.
    ============================================================ */
 (function () {
   "use strict";
 
   /* ─────────────── ثابت‌ها ─────────────── */
 
-  var RTL_CLASS  = "__pf-rtl__";
-  var FONT_CLASS = "__pf-font__";
-  var DIR_MARK   = "data-pf-dir";
+  var RTL_CLASS      = "__pf-rtl__";
+  var FONT_CLASS     = "__pf-font__";
+  var RTLFLEX_CLASS  = "__pf-rtlflex__";
+  var RTLFLEXEND_CLASS = "__pf-rtlflexend__";
+  var DIR_MARK       = "data-pf-dir";
 
   var MAX_CONTAINER_TEXT = 3000;   // کانتینر بزرگ‌تر از این = چیدمان، نه پیام
   var MAX_PAGE_TEXT      = 300000; // صفحات غول‌پیکر: فقط روی موتاسیون‌ها تکیه کن
@@ -79,6 +94,7 @@
   var savedDirs    = new WeakMap(); // el → مقدار dir اصلی سایت
   var shadowRoots  = new Set();
   var styledShadows = new WeakSet();
+  var marked       = new Set();  // FIX-A: هر المانی که کلاس/dir گرفته — برای بازارزیابی فوری تاگل‌ها
 
   /* ─────────────── استایل و فونت تزریقی ───────────────
      دلیل مهمِ تزریق فونت با JS:
@@ -104,6 +120,8 @@
   function rulesCSS() {
     return "." + RTL_CLASS + "{unicode-bidi:plaintext!important;text-align:right!important}"
       + "." + RTL_CLASS + " pre," + "." + RTL_CLASS + " code{text-align:left!important}"
+      + "." + RTLFLEX_CLASS + "{direction:rtl!important;text-align:right!important}"
+      + "." + RTLFLEXEND_CLASS + "{direction:rtl!important;text-align:right!important;justify-content:flex-start!important}"
       + "." + FONT_CLASS + "," + "." + FONT_CLASS + " *{"
       + "font-family:'Vazirmatn','Vazir',Tahoma,'Segoe UI',sans-serif,"
       + "'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji'!important;}";
@@ -177,18 +195,58 @@
     if (tag === "INPUT") return false;
     var d = displayOf(el);
     if (FLEX_KINDS.has(d)) {
-      // فلکس/گرید فقط وقتی امن است که فرزند المنت نداشته باشد
-      return el.childElementCount === 0;
+      // بدون فرزند المنت = متنِ خام داخل flex (امن، مثل block)
+      if (el.childElementCount === 0) return true;
+      // FIX-E v2: فرگمنت‌های متنی inline → کانتینر یکسره بلوکِ متنی است
+      return isFlexFragText(el);
     }
     if (!d) return BLOCK_TAG_RE.test(tag);
     if (d === "inline" || d.indexOf("ruby") === 0) return false;
     return true;
   }
 
+  // FIX-E v2: کانتینر flex/grid که همه‌ی فرزندانش فرگمنتِ متنیِ inline‌اند.
+  // این الگو «پیامِ خردشده به span» در ری‌اکت است (نه منوی سایت!)
+  // - هر فرزندی غیر‑inline (آواتار، دکمه، svg، div) → رد
+  // - کانتینری که همه‌ی بچه‌هایش لینک (<a>) است = نوبار/منو → رد
+  function isFlexFragText(el) {
+    var ch = el.children;
+    var n = ch ? ch.length : 0;
+    if (n < 2 || n > 60) return false;
+    var d = displayOf(el);
+    if (d.indexOf("flex") === -1 && d.indexOf("grid") === -1) return false;
+    var links = 0;
+    for (var i = 0; i < n; i++) {
+      var tg = ch[i].tagName;
+      if (!tg) return false;
+      if (tg === "A") { links++; continue; }
+      if (!INLINE.has(tg) && tg !== "BR") return false;
+    }
+    if (links === n) return false; // همه لینک = منو
+    return true;
+  }
+
+  // نوع کلاسِ flex: اگر سایت خودش justify:*-end داشته، برای حفظ لنگر بصری
+  // با تعویض جهت، justify را به flex-start جبران می‌کنیم.
+  function flexFragKind(el) {
+    if (!isFlexFragText(el)) return 0;
+    try {
+      var jc = "";
+      var win = el.ownerDocument.defaultView;
+      if (win && win.getComputedStyle) {
+        var cs = win.getComputedStyle(el);
+        jc = cs ? (cs.justifyContent || "") : "";
+      }
+      if (/end$/i.test(jc)) return 2;
+    } catch (e) {}
+    return 1;
+  }
+
   // بلاک‌های بزرگِ چیدمانی را رد کن تا «کل سایت» راست‌چین نشود
   function isEligibleBlock(el) {
     var kids = el.childElementCount;
     if (!kids) return true;
+    if (isFlexFragText(el)) return true; // فرگمنت‌های متنی: سقف متن در applyEl چک می‌شود
     if (kids > 14) return false;
     if (kids > 4) {
       try {
@@ -267,9 +325,14 @@
       }
     }
     if (!fa) return NO;
+    // FIX-B (تکمیل‌شده): تشخیص هوشمند دومرحله‌ای — نه صرفاً اولین حرف!
+    //   الف) شروع فارسی → همیشه RTL (مثل plaintext؛ حتی با لاتینِ زیاد در میان)
+    //   ب) شروع لاتین ولی سهم حروف فارسی ≥ ۰٫۳۵ → RTL
+    //      (مثل «apt دانلودش نشد، بذار وضعیت npm رو چک کنم» که غالباً
+    //      فارسی است و با قانونِ فقط-اولین-حرف اشتباهی LTR می‌شد.)
     var total = fa + la;
     var ratio = total ? fa / total : 1;
-    var dominant = ratio >= 0.4 || (first === 1 && ratio >= 0.18);
+    var dominant = (first === 1) || ratio >= 0.35;
     return { fa: true, dominant: dominant };
   }
 
@@ -284,11 +347,49 @@
 
   /* ─────────────── اعمال کلاس‌ها ─────────────── */
 
+  var jcCache = new WeakMap(); // کش justifyContent برای flexFragKind
+
+  function flexFragKindCached(el) {
+    var k = jcCache.get(el);
+    if (k === undefined) {
+      k = flexFragKind(el);
+      jcCache.set(el, k);
+    }
+    return k;
+  }
+
   function applyClasses(el, fa, dominant) {
     try {
-      el.classList.toggle(RTL_CLASS,  !!(RTL_ENABLED  && fa && dominant));
+      var wantRtl = !!(RTL_ENABLED && fa && dominant);
+      var kind = wantRtl ? flexFragKindCached(el) : 0;
+      // کانتینر flex با فرگمنت‌های inline: plaintext کافی نیست — ظرفِ فلکس
+      // هر span را جدا پاراگراف می‌بیند. با direction روی ظرف، ترتیب بصری
+      // فرگمنت‌ها معکوس می‌شود. برای *-endها هم لنگر راست جبران می‌گردد.
+      el.classList.toggle(RTL_CLASS,        wantRtl && kind === 0);
+      el.classList.toggle(RTLFLEX_CLASS,    wantRtl && kind === 1);
+      el.classList.toggle(RTLFLEXEND_CLASS, wantRtl && kind === 2);
       el.classList.toggle(FONT_CLASS, !!(FONT_ENABLED && fa));
+      // FIX-A: اگر هنوز نشانه‌ای روی المان هست ثبتش کن، وگرنه از فهرست خارجش کن
+      if (el.classList.contains(RTL_CLASS) || el.classList.contains(FONT_CLASS)
+          || el.classList.contains(RTLFLEX_CLASS) || el.classList.contains(RTLFLEXEND_CLASS)) marked.add(el);
+      else if (!el.hasAttribute || !el.hasAttribute(DIR_MARK)) marked.delete(el);
     } catch (e) {}
+  }
+
+  // پاکسازی کامل علائم از یک المان (کلاس‌ها + dir + کش‌ها + فهرست)
+  function clearEl(el) {
+    sigCache.delete(el);
+    jcCache.delete(el);
+    try {
+      el.classList.remove(RTL_CLASS);
+      el.classList.remove(FONT_CLASS);
+      el.classList.remove(RTLFLEX_CLASS);
+      el.classList.remove(RTLFLEXEND_CLASS);
+    } catch (e) {}
+    try {
+      if (el.hasAttribute && el.hasAttribute(DIR_MARK)) restoreDir(el);
+    } catch (e) {}
+    marked.delete(el);
   }
 
   function applyEl(el) {
@@ -306,7 +407,8 @@
       applyClasses(el, false, false);
       return;
     }
-    if (t.length > MAX_CONTAINER_TEXT) return;
+    // FIX-F: عبور از سقف باید علائم کهنه را بشوید — قبلاً return خشک بود
+    if (t.length > MAX_CONTAINER_TEXT) { clearEl(el); return; }
 
     var sig = textSig(t);
     var cached = sigCache.get(el);
@@ -360,6 +462,11 @@
     } else {
       restoreDir(el);
     }
+    // FIX-A: فیلد هم در فهرست علامت‌خورده‌ها نگه داشته شود
+    try {
+      if (el.classList.contains(FONT_CLASS) || el.hasAttribute(DIR_MARK)) marked.add(el);
+      else marked.delete(el);
+    } catch (e) {}
   }
 
   /* ─────────────── اسکن ─────────────── */
@@ -448,11 +555,13 @@
   function stripRoot(root) {
     try {
       // یک پاس واحد روی DOM به‌جای سه پاس (رفع هنگ هنگام تاگل)
-      var els = root.querySelectorAll("." + RTL_CLASS + ",." + FONT_CLASS + ",[" + DIR_MARK + "]");
+      var els = root.querySelectorAll("." + RTL_CLASS + ",." + FONT_CLASS + ",." + RTLFLEX_CLASS + ",." + RTLFLEXEND_CLASS + ",[" + DIR_MARK + "]");
       for (var i = 0; i < els.length; i++) {
         var el = els[i];
         el.classList.remove(RTL_CLASS);
         el.classList.remove(FONT_CLASS);
+        el.classList.remove(RTLFLEX_CLASS);
+        el.classList.remove(RTLFLEXEND_CLASS);
         if (el.hasAttribute(DIR_MARK)) restoreDir(el);
       }
     } catch (e) {}
@@ -472,14 +581,45 @@
     });
     for (var i = 0; i < live.length && i < 10; i++) scanRoot(live[i]);
 
+    // هرَس فهرست علامت‌خورده‌ها (سقف‌دار تا ارزان بماند)
+    var pruned = 0;
+    marked.forEach(function (el) {
+      if (++pruned > 5000) return;
+      try { if (!el.isConnected) marked.delete(el); } catch (e) {}
+    });
+
     discoverShadows();
+  }
+
+  // FIX-A: فقط المان‌هایی که پیش‌تر علامت گرفته‌اند بازارزیابی می‌شوند.
+  // سریع، مستقل از بزرگی صفحه، و far هم mergeن نگه می‌دارد دو تاگل را:
+  // هر المان با وضعیتِ فعلیِ هر دو پرچم دوباره کلاس می‌گیرد — حذف یکی
+  // دیگری را نمی‌پرانَد.
+  function reapplyMarked() {
+    if (marked.size === 0) return;
+    var i = 0;
+    marked.forEach(function (el) {
+      if (++i > 5000) return; // سقف امنیت: بقیه در تیک بعدی هرَس می‌شوند
+      try {
+        if (!el.isConnected) { marked.delete(el); return; }
+        applyEl(el);
+      } catch (e) {}
+    });
   }
 
   function applyAll() {
     if (!document.body) return;
-    stripRoot(document.body);
-    shadowRoots.forEach(function (sr) { stripRoot(sr); });
+    reapplyMarked();
     scanAll();
+  }
+
+  function hasAnyMark(el) {
+    try {
+      var cl = el.classList;
+      return !!(cl && (cl.contains(RTL_CLASS) || cl.contains(FONT_CLASS)
+        || cl.contains(RTLFLEX_CLASS) || cl.contains(RTLFLEXEND_CLASS)))
+        || (el.hasAttribute && el.hasAttribute(DIR_MARK));
+    } catch (e) { return false; }
   }
 
   /* ─────────────── MutationObserver (بهینه) ─────────────── */
@@ -516,10 +656,14 @@
         applyField(node);
         return;
       }
-      // اگر خودِ المان بلاکِ متنی است فقط خودش؛ وگرنه زیردرختش را اسکن کن
+      // FIX-F: ساختار ممکن است عوض شده باشد → کش justify بی‌اعتبار شود
+      jcCache.delete(node);
+      // اگر خودِ المان بلاکِ متنی است فقط خودش؛ وگرنه علائم کهنه را بشو
+      // و زیردرختش را دوباره ارزیابی کن
       if (isTextBlock(node) && isEligibleBlock(node)) {
         applyEl(node);
       } else {
+        if (hasAnyMark(node)) clearEl(node);
         scanRoot(node);
       }
     }
@@ -558,6 +702,11 @@
       try { processNode(out[i]); } catch (e) {}
       done++;
     }
+    // FIX-C: باقیمانده را برای فریم بعدی نگه دار — قبلاً بی‌صدا گم می‌شد!
+    if (done < out.length) {
+      queue = out.slice(done);
+      schedule();
+    }
   }
 
   var observer;
@@ -583,6 +732,11 @@
           }
           // حذف/جایگزینی: والد را دوباره ارزیابی کن (فقط اگر بلاک است)
           if (m.removedNodes.length && m.target && m.target.nodeType === Node.ELEMENT_NODE)
+            queue.push(m.target);
+          // FIX-F: افزودن فرزند به «والدِ مارک‌دار» هم ساختار را عوض می‌کند؛
+          // والد به صف برود تا کش justify بی‌اعتبار شود و علائم کهنه پاک شوند
+          else if (added.length && m.target && m.target.nodeType === Node.ELEMENT_NODE
+                   && hasAnyMark(m.target))
             queue.push(m.target);
         }
       }
@@ -630,20 +784,16 @@
     } catch (e) { cb(); }
   }
 
-  // اعمال تنظیمات با دی‌بانس + زمان idle مرورگر → بدون هنگ
+  // FIX-A: تاگل باید فوری باشد — بازارزیابی فهرست علامت‌خورده‌ها یک
+  // پیمایش کوچک است، پس بدون requestIdleCallback و بدون strip سراسری.
+  // دی‌بانس کوتاه تا تاگل‌های پشت‌سرهم یک‌بار اعمال شوند.
   var applyTimer = null;
   function scheduleApplyAll() {
     if (applyTimer) clearTimeout(applyTimer);
     applyTimer = setTimeout(function () {
       applyTimer = null;
-      var run = function () {
-        if (document.body) {
-          try { applyAll(); } catch (e) {}
-        }
-      };
-      if (typeof requestIdleCallback !== "undefined") requestIdleCallback(run, { timeout: 1500 });
-      else setTimeout(run, 0);
-    }, 120);
+      try { applyAll(); } catch (e) {}
+    }, 60);
   }
 
   try {

@@ -5,9 +5,19 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
+    /* FIX-D: فونت وزیرمتنِ رابط پاپ‌آپ — در صفحات خود اکستنشن
+       (منشأ chrome-extension) آدرس نسبی به‌درستی resolve می‌شود */
+    @font-face {
+      font-family: 'Vazirmatn';
+      font-style: normal;
+      font-weight: 100 900;
+      font-display: swap;
+      src: url('fonts/Vazirmatn-Variable.woff2') format('woff2');
+    }
+
     body {
       width: 256px;
-      font-family: 'Segoe UI', Tahoma, sans-serif;
+      font-family: 'Vazirmatn', 'Segoe UI', Tahoma, sans-serif;
       background: #f5f5f5;
       color: #2B2B2B;
       overflow: hidden;
@@ -161,7 +171,7 @@
 
   <div class="header">
     <div class="brand">Persian <span>Flow</span></div>
-    <div class="version">v1.0.0</div>
+    <div class="version">v1.1.0</div>
   </div>
 
   <div class="options">

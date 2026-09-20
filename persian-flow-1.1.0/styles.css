@@ -20,6 +20,24 @@
   text-align: right !important;
 }
 
+/* حباب‌های flex با فرگمنت‌های inline (پیام تکه‌تکه‌ی ری‌اکت):
+   direction روی خودِ فلکس، ترتیب بصریِ spanها را معکوس می‌کند.
+   چرا اینجا direction امن است؟ چون تمام فرزندان inline هستند،
+   پس معکوس‌شدن فقط ترتیب متن را اصلاح می‌کند نه لی‌آوت سایت را. */
+.__pf-rtlflex__:not(#__pfz__):not(#__pfz__) {
+  direction: rtl !important;
+  text-align: right !important;
+}
+
+/* وقتی سایت خودش justify-content: *-end داشته، بعد از تعویض جهت
+   لنگر بصری به چپ می‌رود؛ با flex-start جبرانش می‌کنیم تا حباب
+   همچنان به همان لبه‌ی «راست» بچسبد. */
+.__pf-rtlflexend__:not(#__pfz__):not(#__pfz__) {
+  direction: rtl !important;
+  text-align: right !important;
+  justify-content: flex-start !important;
+}
+
 /* بلوک‌های کد داخل محتوای فارسی باید چپ‌چین بمانند */
 .__pf-rtl__:not(#__pfz__) :is(pre, code, kbd, samp, .cm-content, .monaco-editor) {
   text-align: left !important;
