@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* FIX-D: فونت وزیرمتنِ رابط پاپ‌آپ — در صفحات خود اکستنشن
+       (منشأ chrome-extension) آدرس نسبی به‌درستی resolve می‌شود */
+    @font-face {
+      font-family: 'Vazirmatn';
+      font-style: normal;
+      font-weight: 100 900;
+      font-display: swap;
+      src: url('fonts/Vazirmatn-Variable.woff2') format('woff2');
+    }
+
+    body {
+      width: 256px;
+      font-family: 'Vazirmatn', 'Segoe UI', Tahoma, sans-serif;
+      background: #f5f5f5;
+      color: #2B2B2B;
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px 4px;
+    }
+    .brand {
+      font-size: 14px;
+      font-weight: 800;
+      color: #2B2B2B;
+      letter-spacing: .2px;
+    }
+    .brand span { color: #ECA72C; }
+    .version {
+      font-size: 10px;
+      font-weight: 700;
+      color: #999;
+      background: #fff;
+      padding: 2px 8px;
+      border-radius: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    }
+    /* حالت «آپدیت موجود است» — کنار شماره‌ی نسخه، دکمه‌ی طلایی */
+    .version.version-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      text-decoration: none;
+      color: #b8860b;
+      border: 1px solid #ecaa2c66;
+      background: #fff8e8;
+      cursor: pointer;
+      animation: pf-glow 2s ease-in-out infinite;
+    }
+    @keyframes pf-glow {
+      0%, 100% { box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+      50%      { box-shadow: 0 1px 8px rgba(236,167,44,.55); }
+    }
+    .version-hint {
+      font-size: 8.5px;
+      font-weight: 800;
+      color: #fff;
+      background: #ECA72C;
+      padding: 1px 6px;
+      border-radius: 10px;
+      white-space: nowrap;
+    }
+    .version-link[hidden], .version-static[hidden] { display: none; }
+
+    /* ── Options ── */
+    .options {
+      background: #fff;
+      margin: 8px 10px 0;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    }
+
+    .option-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 14px;
+      cursor: pointer;
+      transition: background 0.15s;
+      user-select: none;
+      gap: 10px;
+    }
+    .option-row:hover { background: #fdf6e8; }
+    .option-row:last-child { border-radius: 0 0 10px 10px; }
+
+    .option-label {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: #2B2B2B;
+    }
+    .option-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      background: #f5f5f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .divider { height: 1px; background: #f0f0f0; margin: 0 14px; }
+
+    /* ── Toggle ── */
+    .toggle { position: relative; width: 38px; height: 22px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .slider {
+      position: absolute; inset: 0;
+      background: #d1d5db; border-radius: 22px;
+      transition: background 0.2s; cursor: pointer;
+    }
+    .slider::before {
+      content: ''; position: absolute;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: #fff; top: 3px; right: 3px;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    }
+    .toggle input:checked + .slider { background: #ECA72C; }
+    .toggle input:checked + .slider::before { transform: translateX(-16px); }
+
+    /* ── Hint ── */
+    .hint {
+      margin: 8px 14px 6px;
+      font-size: 10px;
+      line-height: 1.7;
+      color: #999;
+      text-align: center;
+    }
+
+    /* ── Update ── */
+    .update-row {
+      display: block;
+      margin: 4px 10px 0;
+      padding: 7px 12px;
+      border-radius: 10px;
+      background: #fff3d6;
+      border: 1px solid #ecaa2c55;
+      font-size: 11px;
+      font-weight: 600;
+      color: #8a5a00;
+      text-align: center;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+    .update-row:hover { background: #ffeabf; }
+    .update-row[hidden] { display: none; }
+
+    /* ── Footer (سازنده و سورس) ── */
+    .footer {
+      margin-top: 10px;
+      padding: 8px 12px 10px;
+      border-top: 1px solid #ececec;
+      font-size: 10.5px;
+      color: #999;
+      line-height: 1.9;
+      text-align: center;
+    }
+    .footer a {
+      color: #777;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .footer a:hover { text-decoration: underline; }
+
+    /* نام طلایی سازنده */
+    .gold {
+      font-weight: 800;
+      color: #b8860b;
+      background: linear-gradient(120deg, #9a7016 0%, #e9b62c 30%, #fff1c2 50%, #e9b62c 70%, #8a6514 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      transition: background-position 0.4s;
+    }
+    .gold:hover { text-decoration: none; background-position: 100% center; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="brand">Persian <span>Flow</span></div>
+    <a id="version-badge" class="version version-link" href="#" target="_blank" rel="noopener" hidden>
+      <span id="version-text">v1.1.0</span>
+      <span id="version-hint" class="version-hint">نسخه جدید موجود است</span>
+    </a>
+    <span id="version-static" class="version">v1.1.0</span>
+  </div>
+
+  <div class="options">
+    <label class="option-row">
+      <span class="option-label">
+        <span class="option-icon">⟵</span>
+        راست‌چین کردن متن
+      </span>
+      <span class="toggle">
+        <input type="checkbox" id="toggle-rtl" />
+        <span class="slider"></span>
+      </span>
+    </label>
+
+    <div class="divider"></div>
+
+    <label class="option-row">
+      <span class="option-label">
+        <span class="option-icon">ف</span>
+        فونت فارسی (وزیرمتن)
+      </span>
+      <span class="toggle">
+        <input type="checkbox" id="toggle-font" />
+        <span class="slider"></span>
+      </span>
+    </label>
+  </div>
+
+  <a id="update-row"
+     class="update-row"
+     href="https://github.com/Kourosh242/Persian-Flow/releases/latest"
+     target="_blank" rel="noopener" hidden>
+    <span id="update-text"></span>
+  </a>
+
+  <div class="hint">فونت به‌صورت داخلی لود می‌شود و روی تمام سایت‌ها (حتی با محدودیت CSP) کار می‌کند</div>
+
+  <div class="footer">
+    <div>ساخته شده توسط
+      <a class="gold" href="https://github.com/Kourosh242/" target="_blank" rel="noopener">kourosh</a>
+    </div>
+    <div>سورس پروژه:
+      <a href="https://github.com/Kourosh242/Persian-Flow" target="_blank" rel="noopener">سورس</a>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
