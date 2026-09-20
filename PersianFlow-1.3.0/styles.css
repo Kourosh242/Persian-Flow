@@ -1,5 +1,5 @@
 /* ============================================================
-   Persian Flow v1.2.0 — قوانین کلاس‌ها (تزریق از مسیر مانیفست)
+   Persian Flow v1.3.0 — قوانین کلاس‌ها (تزریق از مسیر مانیفست)
    ------------------------------------------------------------
    نکته: @font-face عمداً اینجا نیست! آدرس نسبی در CSS تزریقیِ
    مانیفست نسبت به URL خود صفحه ریزالو می‌شود و درخواست فونت به
@@ -133,4 +133,15 @@
 .__pf-f-behdad__:not(#__pfz__) * {
   font-family: 'Behdad', 'Vazirmatn', Tahoma, 'Segoe UI', sans-serif,
     'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji' !important;
+}
+
+/* ── FIX-N (v1.3.0): کد باید مونواسپیس بماند ─────────────────
+   قانون «*»ی فونت فارسی به تمام نوادگانِ بلوکِ فارسی می‌رسید و
+   <code>/<pre> و توکن‌های هایلایت‌شده‌ی کد داخل چت‌های AI را هم
+   از مونواسپیس به فونت فارسی می‌برد. این قانون — عمداً بعد از
+   هر ۱۱ کلاس خانواده و با :is (specificity بالاتر از قانون «*») —
+   نواده‌های کد را یکجا به پشته‌ی مونواسپیس برمی‌گرداند. */
+.__pf-font__:not(#__pfz__):not(#__pfz__) :is(pre, code, kbd, samp, tt, .cm-content, .monaco-editor),
+.__pf-font__:not(#__pfz__):not(#__pfz__) :is(pre, code, kbd, samp, tt, .cm-content, .monaco-editor) * {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace !important;
 }

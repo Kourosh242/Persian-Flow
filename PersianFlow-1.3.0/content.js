@@ -1,6 +1,21 @@
 /* ============================================================
-   Persian Flow v1.2.0 — RTL + فونت فارسی (داینامیک) برای محتوا
+   Persian Flow v1.3.0 — RTL + فونت فارسی (داینامیک) برای محتوا
    ------------------------------------------------------------
+   v1.3.0 (گزارش کاربر از چت طولانی کلود):
+   ✦ FIX-K (سکونِ RTL روی پیام‌های انتهایی چت‌های طولانی): سه
+     نقص مرکب — (الف) سرریز صف موتاسیون با «queue.length = CAP»
+     گره‌های تازه (پیام‌های آخر چت!) را بی‌صدا دور می‌ریخت و
+     قدیمی‌ها را نگه می‌داشت؛ (ب) اسکن جبرانیِ دوره‌ای با سقف
+     ۸٬۰۰۰ گره‌متنی از ابتدای سند می‌شمرد و روی تخته‌های طولانی
+     چت AI هرگز به انتهای سند نمی‌رسید؛ (پ) گارد ۶۰۰هزارکاراکتری
+     scanAll روی صفحات خیلی بزرگ کل شبکه‌ی اطمینان را بی‌صدا
+     خاموش می‌کرد. نتیجه: پاراگراف‌های جدید برای همیشه LTR.
+     حالا: سرریز = خالی‌شدن کامل صف + پرچم sweep + اسکن جبرانیِ
+     دی‌بانس‌شده‌ی ۲۵۰ms (هیچ گره‌تازه‌ای قربانی نمی‌شود)، سقف
+     اسکن به ۵۰٬۰۰۰ گره و سقف کاراکتری به ۲٬۰۰۰٬۰۰۰ ارتقا یافت
+     و sweep حتی فراتر از سقف کاراکتری هم پیمایش کران‌دار می‌کند
+     (با کش sig ارزان است؛ کار هر پیمایش با سقف گره محدود است).
+
    v1.2.0 (انتخاب فونت + رفع گزارش‌های کاربر):
    ✦ FIX-G (فونت داینامیک ۱۱تایی): خانواده‌ی فونت دیگر هاردکد
      نیست. رجیستری مشترک pf-fonts.js منبع واحد است؛ کلید ذخیره‌ای
@@ -68,8 +83,8 @@
   var FAM_PREFIX     = "__pf-f-";
 
   var MAX_CONTAINER_TEXT = 3000;   // کانتینر بزرگ‌تر از این = چیدمان، نه پیام
-  var MAX_PAGE_TEXT      = 600000; // FIX-J: ۳۰۰هزار → ۶۰۰هزار (تخته‌های طولانی چت AI)
-  var SCAN_NODE_CAP      = 8000;   // سقف گره‌متنی در هر اسکن (با کش sig ارزان است)
+  var MAX_PAGE_TEXT      = 2000000; // FIX-K: ۶۰۰هزار → ۲٬۰۰۰٬۰۰۰ — و sweep حتی فراتر از این سقف هم اسکن می‌کند (کره‌کار)
+  var SCAN_NODE_CAP      = 50000;  // FIX-K: ۸هزار → ۵۰هزار؛ شبکه‌ی اطمینان باید به ته بلندترین تخته‌ی چت AI هم برسد (کش sig ارزان است)
   var FIELD_CAP          = 300;    // سقف فیلدهای بررسی‌شده در هر اسکن
   var FLUSH_CAP          = 150;    // سقف پردازش در هر فریمِ موتاسیون
   var QUEUE_CAP          = 2000;   // سقف صف حافظه؛ پشت سرش sweep جایگزین است
@@ -326,6 +341,35 @@
     var kids = el.childElementCount;
     if (!kids) return true;
     if (isFlexFragText(el)) return true; // فرگمنت‌های متنی: سقف متن در applyEl چک می‌شود
+    // FIX-M (v1.3.0): ظرف با ≥۲ فرزندِ بلوکِ متنی (دو پاراگراف، پاراگراف+دکمه و…)
+    // یک «پیامِ واحد» نیست — تحلیل ترکیبیِ متنِ چسبیده‌ی بلوک‌ها قضاوت را
+    // خراب می‌کند (پاراگراف انگلیسیِ بغل‌دستی هم راست‌چین/فونت‌دار می‌شد).
+    // به سطح پایین‌تر فرو می‌رویم تا هر بلوک مستقل قضاوت شود.
+    var blockKids = 0;
+    var chEls = el.children;
+    for (var bi = 0; bi < chEls.length; bi++) {
+      var btag = chEls[bi].tagName;
+      if (btag && BLOCK_TAG_RE.test(btag) && !INLINE.has(btag)) {
+        blockKids++;
+        if (blockKids >= 2) return false;
+      }
+    }
+    // FIX-M (تکمیل): فرزندِ بلوکی که خودش چندبلوک است (حباب با
+    // «پاراگراف+دکمه») یعنی این ظرف چیدمان است نه پیام — وگرنه قضاوت
+    // ترکیبی روی والدِ بالادست هم رخ می‌دهد (مثل تعویض innerHTML).
+    for (var gi = 0; gi < chEls.length; gi++) {
+      var g = chEls[gi];
+      if (!g.tagName || !BLOCK_TAG_RE.test(g.tagName) || INLINE.has(g.tagName)) continue;
+      if (g.childElementCount < 2) continue;
+      var gc = g.children, gb = 0;
+      for (var gj = 0; gj < gc.length; gj++) {
+        var gtag = gc[gj].tagName;
+        if (gtag && BLOCK_TAG_RE.test(gtag) && !INLINE.has(gtag)) {
+          gb++;
+          if (gb >= 2) return false;
+        }
+      }
+    }
     if (kids > 14) return false;
     if (kids > 4) {
       try {
@@ -499,10 +543,11 @@
     if (!t) {
       sigCache.delete(el);
       applyClasses(el, false, false);
+      refreshMarkedAncestors(el); // FIX-L: تخلیه‌ی متن هم باید اجداد را بازارزیابی کند
       return;
     }
     // FIX-F: عبور از سقف باید علائم کهنه را بشوید — قبلاً return خشک بود
-    if (t.length > MAX_CONTAINER_TEXT) { clearEl(el); return; }
+    if (t.length > MAX_CONTAINER_TEXT) { clearEl(el); refreshMarkedAncestors(el); return; }
 
     var sig = textSig(t);
     var cached = sigCache.get(el);
@@ -519,6 +564,25 @@
     // فارسیِ predominant است، خود بلوک هم علامت بخورد تا base direction
     // کل پاراگراف یکجا rtl باشد و ترتیب کلمات هرگز قیل نشود (گزارش ۳ و ۴).
     if (RTL_ENABLED && r.fa && r.dominant) uniformMark(el);
+    else refreshMarkedAncestors(el); // FIX-L: فلیپ به غیرغالب → شستن علائم کهنه‌ی اجداد
+  }
+
+  // FIX-L (v1.3.0): کهنگی علائم اجداد — وقتی محتوای ریل‌ای به انگلیسی/
+  // غیرغالب برگشت، ظرف‌های پیش‌علامت‌خورده‌ی بالادست (بلوک یکدستِ
+  // FIX-H یا wrapperای که هنگام مونت علامت گرفته بود) هم باید بازارزیابی
+  // و در صورت لزوم پاک شوند؛ قبلاً برای همیشه علامت‌دار می‌ماندند —
+  // مثل LIای که فارسی بود و بعداً انگلیسی شد ولی راست‌چین/فونت‌دار ماند.
+  function refreshMarkedAncestors(el) {
+    var anc = el.parentElement, hops = 0, done = 0;
+    while (anc && hops < 6 && done < 3) {
+      hops++;
+      var tg = anc.tagName;
+      if (!tg) break;
+      if (SKIP.has(tg) || STOP.has(tg)) break;
+      try { if (editableRoot(anc)) break; } catch (e) {}
+      if (marked.has(anc)) { applyEl(anc); done++; }
+      anc = anc.parentElement;
+    }
   }
 
   // FIX-H: الصای «بلوک یکدست» — از ریل‌ای به سمت بالا، اولین بلوک متنی
@@ -718,7 +782,11 @@
     if (!document.body) return;
     var total;
     try { total = (document.body.textContent || "").length; } catch (e) { total = 0; }
-    if (total < MAX_PAGE_TEXT) scanRoot(document.body);
+    // FIX-K: گارد کاراکتری قبلاً روی صفحات بزرگ کل شبکه‌ی اطمینان را
+    // خاموش می‌کرد (بدون هیچ جبرانی). حالا: اسکن معمولی تا سقف، اما
+    // اسکنِ جبرانیِ sweep همیشه اجرا می‌شود — پیمایش با SCAN_NODE_CAP
+    // کران‌دار است و بی‌خطر.
+    if (total < MAX_PAGE_TEXT || sweep) scanRoot(document.body);
 
     // هرس شییدوهای مرده و اسکن زنده‌ها (حداکثر ۱۰ ریشه در هر نوبت)
     var live = [];
@@ -861,6 +929,20 @@
   }
 
   var observer;
+
+  // FIX-K: اسکن جبرانیِ سرریز صف — دی‌بانس‌شده تا در طوفان موتاسیون
+  // (مونت یک‌جای چت طولانی) فقط یک‌بارِ زودهنگام اجرا شود؛ با سقف
+  // SCAN_NODE_CAP بزرگ، این اسکن قطعاً به انتهای سند می‌رسد.
+  var sweepTimer = null;
+  function scheduleSweepScan() {
+    if (sweepTimer) return;
+    sweepTimer = setTimeout(function () {
+      sweepTimer = null;
+      sweep = false;
+      try { scanAll(); } catch (e) {}
+    }, 250);
+  }
+
   try {
     observer = new MutationObserver(function (mutations) {
       dirty = true;
@@ -893,11 +975,16 @@
             queue.push(m.target);
         }
       }
-      // FIX-J: سرریز سخت → گره‌های جدید حذف نمی‌شوند؛ برای همیشه
-      // پرچم sweep روشن می‌شود و اسکن دوره‌ای جبران می‌کند
+      // FIX-K (v1.3.0): سرریز صف — قبلاً صف با «queue.length = QUEUE_CAP»
+      // قطع می‌شد؛ یعنی آخرین گره‌های تازه (پیام‌های انتهایی چت‌های طولانی!)
+      // بی‌صدا دور ریخته می‌شدند و به‌علت سقف کوچک اسکن جبرانی، جبران هم
+      // نمی‌شدند. حالا صف کامل خالی می‌شود (هیچ نیم‌کاره‌ای نمی‌ماند)،
+      // sweep روشن می‌شود و اسکن جبرانیِ دی‌بانس‌شده زودهنگام اجرا می‌گردد.
       if (queue.length > QUEUE_CAP) {
-        queue.length = QUEUE_CAP;
+        queue.length = 0;
+        queueTail = null;
         sweep = true;
+        scheduleSweepScan();
       }
       schedule();
     });
