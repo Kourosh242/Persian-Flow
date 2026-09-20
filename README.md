@@ -11,7 +11,6 @@
 ![engine](https://img.shields.io/badge/Chrome%20%7C%20Edge-MV3-0A66C2)
 ![csp](https://img.shields.io/badge/CSP-compatible-important)
 ![network](https://img.shields.io/badge/network-not%20required-success)
-![tests](https://img.shields.io/badge/tests-84%20unit%20%2B%2029%20e2e-brightgreen)
 ![license](https://img.shields.io/badge/license-MIT-green)
 
 </div>
