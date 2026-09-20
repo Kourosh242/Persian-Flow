@@ -1,6 +1,5 @@
 <div align="center">
 
-<img src="persian-flow-1.1.0/icons/icon128.png" width="96" alt="Persian Flow logo">
 
 # Persian Flow
 
