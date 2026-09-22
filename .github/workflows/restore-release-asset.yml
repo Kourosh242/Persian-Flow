@@ -1,6 +1,9 @@
 name: Restore Persian Flow 1.4.0 asset
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
