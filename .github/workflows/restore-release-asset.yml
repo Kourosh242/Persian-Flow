@@ -1,0 +1,22 @@
+name: Restore Persian Flow 1.4.0 asset
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  restore-release-asset:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the release contents
+        uses: actions/checkout@v4
+
+      - name: Package the extension
+        run: zip -qr /tmp/PersianFlow-1.4.0.zip PersianFlow-1.4.0
+
+      - name: Upload the release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload 1.4.0 /tmp/PersianFlow-1.4.0.zip --clobber
