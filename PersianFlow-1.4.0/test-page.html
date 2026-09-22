@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Persian Flow v1.1.0 — تست محلی</title>
+<!-- شبیه‌سازی CSP سخت‌گیرانه مثل GitHub: هیچ فونت خارجی مجاز نیست -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline';">
+<style>
+  body { font-family: Arial, sans-serif; max-width: 700px; margin: 20px auto; padding: 0 16px; background:#f7f7f7; }
+  .card { background:#fff; border:1px solid #ddd; border-radius:8px; padding:12px 16px; margin:10px 0; }
+  .row { display:flex; gap:12px; align-items:center; }
+  .bubble { background:#e8f0fe; border-radius:12px; padding:8px 14px; }
+  h2 { font-size:14px; color:#666; }
+  #editor { border:1px solid #ccc; border-radius:8px; padding:10px; min-height:44px; background:#fff; }
+</style>
+</head>
+<body>
+
+<h1 style="font-size:18px">تست Persian Flow v1.1.0 (CSP فعال است — font-src 'self')</h1>
+<p style="font-size:12px;color:#777">اگر اکستنشن درست کار کند، همه متن‌های فارسی زیر باید راست‌چین و با فونت وزیرمتن نمایش داده شوند — با وجود CSP بالا. کنسول را باز کنید: نباید خطای CSP برای فونت ببینید.</p>
+
+<div class="card"><h2>۱. متن فارسی خالص</h2>
+<p>سلام! این یک متن کاملاً فارسی است که باید راست‌چین شود و فونت وزیرمتن بگیرد. قیمت ۱۲٬۵۰۰ تومان است.</p></div>
+
+<div class="card"><h2>۲. فارسی + انگلیسی مخلوط (غالب فارسی)</h2>
+<p>این مدل GPT-4 واقعاً عالی شده و reasoning آن از همه مدل‌ها بهتر است!</p></div>
+
+<div class="card"><h2>۲-ب. رگرسیون: شروع با لاتین اما متن فارسی‌غالب (باید RTL شود)</h2>
+<p>apt دانلودش کامل نشد. بذار وضعیت npm رو چک کنم و فقط بخش apt رو دوباره درست اجرا کنم — همه‌چیز فارسی است!</p></div>
+
+<div class="card"><h2>۳. جمله انگلیسی با یک کلمه فارسی (باید چپ‌چین بماند، فقط فونت بگیرد)</h2>
+<p>He said سلام during the meeting and everyone smiled at him.</p></div>
+
+<div class="card"><h2>۳-ب. رگرسیون v1.1.0 — پیام فارسیِ شروع‌شده با فارسی و پر از لاتین (باید RTL شود)</h2>
+<p>سلام پوشه uploads رو پاک کن و بریم برای ورژن 1.1.0 که اپدیت بدیم و این کاملاً در گیت هاب پوش شده، دمت گرم حرفه‌ای!</p></div>
+
+<div class="card"><h2>۴. حباب چت شبیه arena.ai (flex + justify-end → حباب کاربر باید راست بماند)</h2>
+<div class="row" style="justify-content:flex-end"><div class="bubble" style="background:#dcf8c6">سوال فارسی من: چطور از API استفاده کنم؟</div></div>
+<div class="row" style="margin-top:8px"><div class="bubble">پاسخ مدل: خیلی ساده! کافی است کلید API بسازی و یک درخواست POST ارسال کنی.</div></div>
+<div class="row" style="margin-top:8px;justify-content:flex-end"><div class="bubble" style="background:#dcf8c6">A mixed question about API rate limits چطور کار می‌کند؟</div></div></div>
+
+<div class="card"><h2>۵. تودرتوی inline (bold/italic)</h2>
+<div><span><b>این متن <i>فارسی</i> درون چند تگ تو در تو است</b></span></div></div>
+
+<div class="card"><h2>۶. فیلدها — فارسی تایپ کنید، خودش راست‌چین می‌شود</h2>
+<input type="text" placeholder="اینجا تایپ کنید..." style="width:100%;padding:8px;margin-bottom:8px">
+<textarea placeholder="اینجا هم تایپ کنید..." style="width:100%;padding:8px;height:56px"></textarea></div>
+
+<div class="card"><h2>۷. ادیتور contenteditable</h2>
+<div id="editor" contenteditable="true"></div></div>
+
+<div class="card"><h2>۸. Shadow DOM</h2>
+<div id="shadow-host"></div></div>
+
+<div class="card"><h2>۹. محتوای داینامیک (هر ۲ ثانیه یک پیام اضافه می‌شود)</h2>
+<div id="feed"></div></div>
+
+<script>
+  // Shadow DOM
+  const host = document.getElementById('shadow-host');
+  const sr = host.attachShadow({mode:'open'});
+  sr.innerHTML = '<p style="margin:0">این متن داخل Shadow DOM است و باید راست‌چین + وزیرمتن شود ✓</p>';
+
+  // فید داینامیک
+  const msgs = [
+    'پیام اول: سلام دنیا!',
+    'پیام دوم: تست WebSocket وصل است',
+    'Hello world, pure English message here - should stay LTR.',
+    'پیام سوم با مشخصات: v2.5 و latency برابر 120ms است'
+  ];
+  let i = 0;
+  const feed = document.getElementById('feed');
+  setInterval(() => {
+    if (i >= msgs.length) return;
+    const d = document.createElement('div');
+    d.className = 'bubble';
+    d.style.margin = '6px 0';
+    d.textContent = msgs[i++];
+    feed.appendChild(d);
+  }, 2000);
+</script>
+</body>
+</html>
