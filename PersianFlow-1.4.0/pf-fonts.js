@@ -111,6 +111,41 @@
       designer: "font-store",
       faces: [{ file: "Behdad-Regular.woff2", weight: "400" }],
     },
+    /* ── v1.4.0: چهار فونت تازه (از ۱۱ به ۱۵) — سبک‌های محبوب جامعه که
+       بین سنس‌های موجود نبودند: نسخِ عناوین، رترو، نسخ کلاسیک و نستعلیق.
+       هر چهار SIL OFL با پوشش کامل فارسی (پ چ ژ گ + اعداد ۰ تا ۹) و لاتین. */
+    {
+      id: "katibeh",
+      faName: "کاتیبه",
+      family: "Katibeh",
+      variable: false,
+      designer: "برنا ایزدپناه",
+      faces: [{ file: "Katibeh.woff2", weight: "400" }],
+    },
+    {
+      id: "lalezar",
+      faName: "لاله‌زار",
+      family: "Lalezar",
+      variable: false,
+      designer: "برنا ایزدپناه",
+      faces: [{ file: "Lalezar.woff2", weight: "400" }],
+    },
+    {
+      id: "amiri",
+      faName: "آمیتا",
+      family: "Amiri",
+      variable: false,
+      designer: "خالد حسنی (پروژه‌ی آمیتا)",
+      faces: [{ file: "Amiri.woff2", weight: "400" }],
+    },
+    {
+      id: "nastaliq",
+      faName: "نستعلیق",
+      family: "Noto Nastaliq Urdu",
+      variable: true,
+      designer: "تیم Noto گوگل",
+      faces: [{ file: "NotoNastaliqUrdu.woff2", weight: "400 700" }],
+    },
   ];
 
   // پشته‌ی خانواده‌ی CSS برای هر فونت: خودش، سپس وزیرمتن (پوشش گلیف)،

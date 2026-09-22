@@ -1,11 +1,12 @@
-// Persian Flow v1.3.0 — popup
+// Persian Flow v1.4.0 — popup
 // کلیدهای ذخیره‌سازی با نسخه‌های قبلی یکی است تا تنظیمات کاربر حفظ شود.
 // v1.2.0: دید انتخاب فونت داخل همان پاپ‌آپ (بدون تب جدید) + لیبل داینامیک.
 (function () {
   "use strict";
 
-  var toggleRTL  = document.getElementById("toggle-rtl");
-  var toggleFont = document.getElementById("toggle-font");
+  var toggleRTL    = document.getElementById("toggle-rtl");
+  var toggleFont   = document.getElementById("toggle-font");
+  var toggleDigits = document.getElementById("toggle-digits"); // v1.4.0: فارسی‌سازی اعداد
 
   /* ═══ v1.2.0: انتخاب فونت از رجیستری مشترک (pf-fonts.js) ═══ */
   var FONTS = (window.PF_FONTS && window.PF_FONTS.length) ? window.PF_FONTS : [];
@@ -37,7 +38,7 @@
       for (var i = 0; i < FONTS.length; i++) {
         var f = FONTS[i];
         css += "@font-face{font-family:'" + f.family + "';font-style:normal;"
-          + "font-weight:" + (f.variable ? "100 900" : "400") + ";font-display:swap;"
+          + "font-weight:" + f.faces[0].weight + ";font-display:swap;"
           + "src:url('fonts/" + f.faces[0].file + "') format('woff2');}";
       }
       var s = document.createElement("style");
@@ -114,7 +115,10 @@
     currentFontId = f.id;
     markActiveRow();
     updateMainLabel();
-    chrome.storage.sync.set({ pfFontFamily: currentFontId });
+    // انتخاب فونت = اعمالِ فونت با همان یک کلیک: اگر تاگل خاموش بود خودکار
+    // روشن می‌شود (گزارشِ کاربر: «برای اعمال فونت باید دوبار بزنم»).
+    chrome.storage.sync.set({ pfFontFamily: currentFontId, fontEnabled: true });
+    if (toggleFont) toggleFont.checked = true;
   }
 
   function openFontsView() {
@@ -134,11 +138,12 @@
   if (backbtn) backbtn.addEventListener("click", closeFontsView);
 
   /* ═══ خواندن تنظیمات ═══ */
-  var def = { rtlEnabled: true, fontEnabled: true };
+  var def = { rtlEnabled: true, fontEnabled: true, pfDigits: false };
   def[FONT_STORAGE_KEY] = FONT_DEFAULT_ID;
   chrome.storage.sync.get(def, function (prefs) {
     toggleRTL.checked  = !!prefs.rtlEnabled;
     toggleFont.checked = !!prefs.fontEnabled;
+    toggleDigits.checked = !!prefs.pfDigits;
     currentFontId = fontById(prefs[FONT_STORAGE_KEY]).id;
     updateMainLabel();
     markActiveRow();
@@ -152,7 +157,12 @@
     chrome.storage.sync.set({ fontEnabled: toggleFont.checked });
   });
 
-  // همگام‌سازی وقتی جای دیگری (تب/پاپ‌آپ دوم) تنظیمات را عوض کند
+  toggleDigits.addEventListener("change", function () {
+    chrome.storage.sync.set({ pfDigits: toggleDigits.checked });
+  });
+
+  // همگام‌سازی وقتی جای دیگری (تب/پاپ‌آپ دوم) تنظیمات را عوض کند —
+  // FIX-X (v1.4.0): قبلاً فقط فونت همگام می‌شد و هر سه تاگل کهنه می‌ماندند
   try {
     chrome.storage.onChanged.addListener(function (changes) {
       if (changes[FONT_STORAGE_KEY] !== undefined) {
@@ -160,6 +170,9 @@
         updateMainLabel();
         markActiveRow();
       }
+      if (changes.rtlEnabled  !== undefined) toggleRTL.checked    = !!changes.rtlEnabled.newValue;
+      if (changes.fontEnabled !== undefined) toggleFont.checked   = !!changes.fontEnabled.newValue;
+      if (changes.pfDigits    !== undefined) toggleDigits.checked = !!changes.pfDigits.newValue;
     });
   } catch (e) {}
 
